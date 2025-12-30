@@ -1,0 +1,5 @@
+{
+  "name": "BiliCut - Video Learning Assistant",
+  "description": "An AI-powered learning companion for Bilibili videos featuring highlights, transcripts, and interactive chat.",
+  "requestFramePermissions": []
+}
