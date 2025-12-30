@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Video, FileText, MessageSquare, PenTool, LayoutGrid, Globe, ArrowRight, AlertCircle, Loader2, Server, Download, CloudLightning, Bot, Info, Mic } from 'lucide-react';
+import { Search, Video, FileText, MessageSquare, PenTool, LayoutGrid, Globe, ArrowRight, AlertCircle, Loader2, Server, Download, CloudLightning, Bot, Info, Mic, Youtube } from 'lucide-react';
 import Timeline from './components/Timeline';
 import HighlightList from './components/HighlightList';
 import ChatInterface from './components/ChatInterface';
@@ -17,6 +17,9 @@ function App() {
   const [activeTab, setActiveTab] = useState<TabOption>(TabOption.TRANSCRIPT);
   const [currentTime, setCurrentTime] = useState(0);
 
+  // Ref for YouTube player control (simulated)
+  const playerRef = React.useRef<HTMLIFrameElement>(null);
+
   const handleAnalyze = async () => {
     if (!url.trim()) return;
     
@@ -25,10 +28,8 @@ function App() {
     setIsLoading(true);
     setLoadingStep("Connecting to analysis service...");
 
-    // We can't easily stream granular progress from the fetch call in this simple setup,
-    // so we set a timeout to change the message to keep user engaged if it takes long (downloading audio).
     const loadingTimer = setTimeout(() => {
-        setLoadingStep("Downloading audio & Transcribing (this may take 30s)...");
+        setLoadingStep("Downloading content & Transcribing (this may take 30s)...");
     }, 2000);
 
     try {
@@ -45,11 +46,15 @@ function App() {
   };
 
   const handleLucky = () => {
-      setUrl("https://www.bilibili.com/video/BV1J4411C76B"); 
+      // YouTube Lucky Link
+      setUrl("https://www.youtube.com/watch?v=kYJyrUq4w4s"); 
   };
 
   const handleSeek = (time: number) => {
     setCurrentTime(time);
+    // Note: Controlling iframe seek from outside usually requires postMessage API or platform specific JS SDKs.
+    // For this demo, we update the state which triggers re-render of iframe source with start time, 
+    // or we just visually update the timeline. A full implementation would use the YouTube IFrame API.
   };
 
   const handleDownloadTranscript = () => {
@@ -59,7 +64,7 @@ function App() {
     const u = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = u;
-    a.download = `${videoData.bvid}_transcript.txt`;
+    a.download = `${videoData.title.substring(0, 10)}_transcript.txt`;
     a.click();
     URL.revokeObjectURL(u);
   };
@@ -75,13 +80,13 @@ function App() {
             <div className="flex justify-center mb-6">
                  <div className="flex items-center gap-2 text-2xl font-bold text-gray-900">
                     <Video className="text-blue-600" size={32} />
-                    <span>BiliCut</span>
+                    <span>LongCut.ai</span>
                  </div>
             </div>
             
             <div className="space-y-2">
-                <h1 className="text-4xl font-bold text-gray-900 tracking-tight">The best way to learn from Bilibili.</h1>
-                <p className="text-gray-500">Extract highlights, real subtitles, and chat with AI.</p>
+                <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Learn from any video.</h1>
+                <p className="text-gray-500">Supports Bilibili & YouTube. Extract highlights, transcripts, and chat with AI.</p>
             </div>
 
             <div className="relative group">
@@ -93,7 +98,7 @@ function App() {
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
-                    placeholder="Paste Bilibili URL (e.g. https://www.bilibili.com/video/BV1...)"
+                    placeholder="Paste YouTube or Bilibili URL..."
                     className="w-full py-4 pl-12 pr-32 bg-gray-50 border border-gray-200 rounded-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all text-gray-800 placeholder-gray-400"
                 />
                 <div className="absolute inset-y-2 right-2 flex items-center gap-2">
@@ -101,7 +106,8 @@ function App() {
                         onClick={handleLucky}
                         className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition shadow-sm flex items-center gap-1"
                     >
-                        <ArrowRight size={18} />
+                        <Youtube size={16} className="text-red-500"/>
+                        <span className="text-xs">Try Sample</span>
                     </button>
                 </div>
             </div>
@@ -119,9 +125,9 @@ function App() {
                     <Server size={32} />
                  </div>
                  <div>
-                    <h3 className="font-semibold text-gray-900">Hybrid Architecture</h3>
+                    <h3 className="font-semibold text-gray-900">NotebookLLM Style Parsing</h3>
                     <p className="text-sm text-gray-500 mt-1">
-                        Checks for official subtitles first. If missing, it downloads audio and uses <strong>Gemini 1.5 Flash</strong> to accurately transcribe the video content.
+                        We fetch metadata and official subtitles. If missing, we <strong>download the audio</strong> and use Gemini 1.5 Flash to generate a high-quality transcript.
                     </p>
                  </div>
             </div>
@@ -139,7 +145,7 @@ function App() {
                     <Loader2 size={24} className="text-blue-600 animate-pulse" />
                 </div>
             </div>
-            <h2 className="text-gray-900 font-medium mt-6 text-lg">Analyzing Video</h2>
+            <h2 className="text-gray-900 font-medium mt-6 text-lg">Parsing Video</h2>
             <p className="text-gray-500 text-sm mt-2 animate-pulse">{loadingStep}</p>
         </div>
     );
@@ -151,7 +157,7 @@ function App() {
         <nav className="h-16 px-6 bg-white border-b border-gray-100 flex items-center justify-between flex-shrink-0 z-20">
             <div className="flex items-center gap-2 text-gray-900 font-bold text-xl cursor-pointer" onClick={() => setVideoData(null)}>
                 <Video className="text-blue-600" />
-                <span>BiliCut</span>
+                <span>LongCut.ai</span>
             </div>
             <div className="flex items-center gap-4">
                  <div className={`hidden md:flex items-center text-xs px-3 py-1 rounded-full border ${
@@ -183,14 +189,26 @@ function App() {
                 
                 {/* Video Player Container */}
                 <div className="w-full aspect-video bg-black rounded-2xl overflow-hidden shadow-sm relative group">
-                    <iframe
-                        id="bili-player"
-                        src={`//player.bilibili.com/player.html?bvid=${videoData?.bvid}&page=1&high_quality=1&danmaku=0&t=${currentTime}`}
-                        className="w-full h-full"
-                        scrolling="no"
-                        frameBorder="0"
-                        allowFullScreen
-                    ></iframe>
+                    {videoData?.platform === 'youtube' ? (
+                        <iframe
+                            ref={playerRef}
+                            src={`https://www.youtube.com/embed/${videoData.bvid}?start=${Math.floor(currentTime)}&autoplay=1`}
+                            className="w-full h-full"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            title="YouTube video player"
+                        ></iframe>
+                    ) : (
+                        <iframe
+                            id="bili-player"
+                            src={`//player.bilibili.com/player.html?bvid=${videoData?.bvid}&page=1&high_quality=1&danmaku=0&t=${currentTime}`}
+                            className="w-full h-full"
+                            scrolling="no"
+                            frameBorder="0"
+                            allowFullScreen
+                        ></iframe>
+                    )}
                 </div>
 
                 {/* Video Meta & Controls */}
@@ -198,6 +216,7 @@ function App() {
                      <div className="flex justify-between items-start mb-4">
                         <div>
                             <div className="flex items-center gap-2">
+                                {videoData?.platform === 'youtube' && <Youtube size={20} className="text-red-500" />}
                                 <h2 className="text-xl font-bold text-gray-900 line-clamp-1">{videoData?.title}</h2>
                                 {videoData?.category && <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded">{videoData.category}</span>}
                             </div>

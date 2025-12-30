@@ -2,6 +2,7 @@ import { VideoData } from '../types';
 
 // This simulates the data we would get after "Analyzing" a video
 export const MOCK_VIDEO_DATA: VideoData = {
+  platform: 'bilibili',
   bvid: "BV1J4411C76B", // Example ID, will be overwritten by user input if valid
   title: "AI Roadmap 2026: Essential Skills for the Future",
   author: "Tech Visionary",

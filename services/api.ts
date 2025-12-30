@@ -69,6 +69,7 @@ export const analyzeVideo = async (url: string): Promise<AnalyzeResult> => {
       }
 
       const videoData: VideoData = {
+        platform: (json.platform as 'bilibili' | 'youtube') || 'bilibili',
         bvid: json.bvid,
         title: json.title,
         author: json.author,
@@ -117,6 +118,7 @@ export const analyzeVideo = async (url: string): Promise<AnalyzeResult> => {
 
   return {
     data: {
+        platform: 'bilibili',
         bvid: metaInfo.bvid!,
         title: metaInfo.title || "Untitled",
         author: metaInfo.author || "Unknown",
